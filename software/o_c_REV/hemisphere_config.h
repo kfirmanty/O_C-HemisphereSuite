@@ -31,7 +31,6 @@
     DECLARE_APPLET( 30, 0x10, Compare), \
     DECLARE_APPLET( 24, 0x02, CVRecV2), \
     DECLARE_APPLET( 55, 0x80, DrCrusher), \
-    DECLARE_APPLET(  9, 0x08, DualQuant), \
     DECLARE_APPLET( 45, 0x02, EnigmaJr), \
     DECLARE_APPLET( 42, 0x11, EnvFollow), \
     DECLARE_APPLET( 29, 0x04, GateDelay), \
@@ -66,5 +65,6 @@
     DECLARE_APPLET( 53, 0x01, VectorMod), \
     DECLARE_APPLET( 54, 0x01, VectorMorph), \
     DECLARE_APPLET( 43, 0x10, Voltage), \
+    DECLARE_APPLET( 56, 0x08, Harmonizer), \
 }
 /*    DECLARE_APPLET(127, 0x80, DIAGNOSTIC), \ */
