@@ -1,0 +1,184 @@
+// Copyright (c) 2018, Jason Justian
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#include "SegmentDisplay.h"
+float punch_SUM(float v1, float v2) {
+  return v1 + v2;
+}
+float punch_SUB(float v1, float v2) {
+  return v1 - v2;
+}
+float punch_MULT(float v1, float v2) {
+  return v1 * v2;
+}
+float punch_DIV(float v1, float v2) {
+  return v1 / v2 == 0 ? 0.001 : v2;
+}
+int punch_AND(int v1, int v2) {
+  return v1 & v2;
+}
+int punch_OR(int v1, int v2) {
+  return v1 | v2;
+}
+int punch_MOD(int v1, int v2) {
+  return v1 % v2 == 0 ? 1 : v2;
+}
+int punch_XOR(int v1, int v2) {
+  return v1 ^ v2;
+}
+
+typedef int(*PunchFunction)(int, int);
+typedef float(*PunchFunctionF)(float, float);
+
+class Punch : public HemisphereApplet {
+  public:
+
+    const char* applet_name() {
+      return "PunchEff";
+    }
+
+    void Start() {
+      segment.Init(SegmentSize::BIG_SEGMENTS);
+    }
+
+
+    float mapf(float v, float f1, float f2, float t1, float t2) {
+      float fRange = f2 - f1;
+      float vP = (v - f1) / fRange;
+      float tRange = t2 - t1;
+      return (vP * tRange) + t1;
+    }
+
+    float normalize(int v) {
+      return mapf(v, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV, -1.0, 1.0);
+    }
+
+    int toOutput(float v) {
+      return (int)mapf(v, -1.0, 1.0, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV);
+
+    }
+
+    float fold(float v) {
+      return 4.0 * (abs(0.25 * v + 0.25 - round(0.25 * v + 0.25)) - 0.25);
+    }
+
+    void Controller() {
+      int punchIndex = Gate(1) ? 2 : 0 + Gate(0) ? 1 : 0;
+      in[0] = In(0);
+      in[1] = In(1);
+      ForEachChannel(ch) {
+        if (punchIndex < 2) {
+          out[ch] = toOutput(fold(punch_fnf[(punchIndex * 2) + ch](normalize(in[0]), normalize(in[1]))));
+        } else {
+          out[ch] = punch_fn[(punchIndex - 2) + ch](in[0], in[1]);
+        }
+        Out(ch, out[ch]);
+      }
+    }
+
+    void View() {
+      gfxHeader(applet_name());
+      DrawDisplay();
+    }
+
+    void OnButtonPress() {
+    }
+
+    void OnEncoderMove(int direction) {
+    }
+
+    uint32_t OnDataRequest() {
+      uint32_t data = 0;
+      return data;
+    }
+
+    void OnDataReceive(uint32_t data) {
+    }
+
+  protected:
+    void SetHelp() {
+      //                               "------------------" <-- Size Guide
+      help[HEMISPHERE_HELP_DIGITALS] = "1=Bit 1 2=Bit 0";
+      help[HEMISPHERE_HELP_CVS]      = "1=CV1 2=CV2";
+      help[HEMISPHERE_HELP_OUTS]     = "A=Op1 B=Op2";
+      help[HEMISPHERE_HELP_ENCODER]  = "";
+      //                               "------------------" <-- Size Guide
+    }
+
+  private:
+    int in[2];
+    int out[2];
+    int punchIndex;
+    SegmentDisplay segment;
+    const char* op_name[8] = {"Sum", "Sub", "Mult", "Div", "And", "Or", "Mod", "Xor"};
+    PunchFunction punch_fn[4] = {punch_AND, punch_OR, punch_MOD, punch_XOR};
+    PunchFunctionF punch_fnf[4] = {punch_SUM, punch_SUB, punch_MULT, punch_DIV};
+
+    void DrawDisplay() {
+      gfxPrint(0, 15, op_name[punchIndex]);
+      gfxPrint(10, 25, in[0]);
+      gfxPrint(20, 25, in[1]);
+      gfxPrint(30, 25, out[0]);
+      gfxPrint(40, 25, out[1]);
+    }
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Hemisphere Applet Functions
+///
+///  Once you run the find-and-replace to make these refer to Punch,
+///  it's usually not necessary to do anything with these functions. You
+///  should prefer to handle things in the HemisphereApplet child class
+///  above.
+////////////////////////////////////////////////////////////////////////////////
+Punch Punch_instance[2];
+
+void Punch_Start(bool hemisphere) {
+  Punch_instance[hemisphere].BaseStart(hemisphere);
+}
+
+void Punch_Controller(bool hemisphere, bool forwarding) {
+  Punch_instance[hemisphere].BaseController(forwarding);
+}
+
+void Punch_View(bool hemisphere) {
+  Punch_instance[hemisphere].BaseView();
+}
+
+void Punch_OnButtonPress(bool hemisphere) {
+  Punch_instance[hemisphere].OnButtonPress();
+}
+
+void Punch_OnEncoderMove(bool hemisphere, int direction) {
+  Punch_instance[hemisphere].OnEncoderMove(direction);
+}
+
+void Punch_ToggleHelpScreen(bool hemisphere) {
+  Punch_instance[hemisphere].HelpScreen();
+}
+
+uint32_t Punch_OnDataRequest(bool hemisphere) {
+  return Punch_instance[hemisphere].OnDataRequest();
+}
+
+void Punch_OnDataReceive(bool hemisphere, uint32_t data) {
+  Punch_instance[hemisphere].OnDataReceive(data);
+}
