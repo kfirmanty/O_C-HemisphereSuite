@@ -80,14 +80,16 @@ class Punch : public HemisphereApplet {
 
     void Controller() {
       punchIndex = (Gate(0) ? 2 : 0 ) + (Gate(1) ? 1 : 0);
-      in[0] = In(0);
-      in[1] = In(1);
+      int i1t = In(0);
+      int i2t = In(1);
+      in[0] = normalize(i1t);
+      in[1] = normalize(i2t);
       ForEachChannel(ch) {
         if (punchIndex < 2) {
           //out[ch] = toOutput(fold(punch_fnf[punchIndex + ch](normalize(in[0]), normalize(in[1]))));
-          out[ch] = fold(punch_fnf[(punchIndex * 2) + ch](normalize(in[0]), normalize(in[1]))) * HEMISPHERE_MAX_CV;
+          out[ch] = fold(punch_fnf[(punchIndex * 2) + ch](in[0], in[1])) * HEMISPHERE_MAX_CV;
         } else {
-          out[ch] = punch_fn[(punchIndex - 2) + ch](in[0], in[1]);
+          out[ch] = punch_fn[(punchIndex - 2) + ch](i1t, i2t);
         }
         Out(ch, out[ch]);
       }
@@ -123,7 +125,7 @@ class Punch : public HemisphereApplet {
     }
 
   private:
-    int in[2];
+    float in[2];
     int out[2];
     int punchIndex;
     SegmentDisplay segment;
@@ -133,8 +135,8 @@ class Punch : public HemisphereApplet {
 
     void DrawDisplay() {
       gfxPrint(0, 15, op_name[punchIndex * 2]);
-      gfxPrint(0, 25, in[0]);
-      gfxPrint(0, 35, in[1]);
+      gfxPrint(0, 25, in[0] * 100);
+      gfxPrint(0, 35, in[1] * 100);
       gfxPrint(0, 45, out[0]);
       gfxPrint(0, 55, out[1]);
     }
