@@ -1,4 +1,6 @@
-// Copyright (c) 2018, Jason Justian
+// Copyright (c) 2019, Karol Firmanty
+//
+// Based on HEM_Calculate by Jason Justian
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +31,7 @@ float punch_MULT(float v1, float v2) {
   return v1 * v2;
 }
 float punch_DIV(float v1, float v2) {
-  return v1 / v2 == 0 ? 0.001 : v2;
+  return v1 / (v2 == 0 ? 0.001 : v2);
 }
 int punch_AND(int v1, int v2) {
   return v1 & v2;
@@ -67,25 +69,23 @@ class Punch : public HemisphereApplet {
     }
 
     float normalize(int v) {
-      return mapf(v, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV, -1.0, 1.0);
-    }
-
-    int toOutput(float v) {
-      return (int)mapf(v, -1.0, 1.0, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV);
-
+      //return mapf(v, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV, -1.0, 1.0);
+      return (((float)v) / HEMISPHERE_MAX_CV) - 1.0; // 0 10, 5,
     }
 
     float fold(float v) {
-      return 4.0 * (abs(0.25 * v + 0.25 - round(0.25 * v + 0.25)) - 0.25);
+      float rounded = round(0.25 * v + 0.25);
+      return 4.0 * (abs(0.25 * v + 0.25 - rounded) - 0.25);
     }
 
     void Controller() {
-      int punchIndex = Gate(1) ? 2 : 0 + Gate(0) ? 1 : 0;
+      punchIndex = (Gate(0) ? 2 : 0 ) + (Gate(1) ? 1 : 0);
       in[0] = In(0);
       in[1] = In(1);
       ForEachChannel(ch) {
         if (punchIndex < 2) {
-          out[ch] = toOutput(fold(punch_fnf[(punchIndex * 2) + ch](normalize(in[0]), normalize(in[1]))));
+          //out[ch] = toOutput(fold(punch_fnf[punchIndex + ch](normalize(in[0]), normalize(in[1]))));
+          out[ch] = fold(punch_fnf[(punchIndex * 2) + ch](normalize(in[0]), normalize(in[1]))) * HEMISPHERE_MAX_CV;
         } else {
           out[ch] = punch_fn[(punchIndex - 2) + ch](in[0], in[1]);
         }
@@ -132,11 +132,11 @@ class Punch : public HemisphereApplet {
     PunchFunctionF punch_fnf[4] = {punch_SUM, punch_SUB, punch_MULT, punch_DIV};
 
     void DrawDisplay() {
-      gfxPrint(0, 15, op_name[punchIndex]);
-      gfxPrint(10, 25, in[0]);
-      gfxPrint(20, 25, in[1]);
-      gfxPrint(30, 25, out[0]);
-      gfxPrint(40, 25, out[1]);
+      gfxPrint(0, 15, op_name[punchIndex * 2]);
+      gfxPrint(0, 25, in[0]);
+      gfxPrint(0, 35, in[1]);
+      gfxPrint(0, 45, out[0]);
+      gfxPrint(0, 55, out[1]);
     }
 };
 
