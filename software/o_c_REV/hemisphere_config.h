@@ -24,7 +24,7 @@
     DECLARE_APPLET( 38, 0x80, BowTieSeq), \
     DECLARE_APPLET(  4, 0x14, Brancher), \
     DECLARE_APPLET( 31, 0x04, Burst), \
-    DECLARE_APPLET( 12, 0x10, Calculate),\
+    DECLARE_APPLET( 12, 0x10, Punch),\
     DECLARE_APPLET( 32, 0x0a, Carpeggio), \
     DECLARE_APPLET(  6, 0x04, ClockDivider), \
     DECLARE_APPLET( 28, 0x04, ClockSkip), \
