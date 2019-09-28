@@ -60,17 +60,8 @@ class Punch : public HemisphereApplet {
       segment.Init(SegmentSize::BIG_SEGMENTS);
     }
 
-
-    float mapf(float v, float f1, float f2, float t1, float t2) {
-      float fRange = f2 - f1;
-      float vP = (v - f1) / fRange;
-      float tRange = t2 - t1;
-      return (vP * tRange) + t1;
-    }
-
     float normalize(int v) {
-      //return mapf(v, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV, -1.0, 1.0);
-      return (((float)v) / HEMISPHERE_MAX_CV) - 1.0; // 0 10, 5,
+      return (((float)v) / HEMISPHERE_MAX_CV) - 1.0;
     }
 
     float fold(float v) {
@@ -86,7 +77,6 @@ class Punch : public HemisphereApplet {
       in[1] = normalize(i2t);
       ForEachChannel(ch) {
         if (punchIndex < 2) {
-          //out[ch] = toOutput(fold(punch_fnf[punchIndex + ch](normalize(in[0]), normalize(in[1]))));
           out[ch] = fold(punch_fnf[(punchIndex * 2) + ch](in[0], in[1])) * HEMISPHERE_MAX_CV;
         } else {
           out[ch] = punch_fn[(punchIndex - 2) + ch](i1t, i2t);
